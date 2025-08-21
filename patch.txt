@@ -1,1 +1,304 @@
+diff --git a/package.json b/package.json
+index 548addc..1234567 100644
+--- a/package.json
++++ b/package.json
+@@ -20,6 +20,7 @@
+     "lucide-react": "^0.263.1",
+     "next": "13.4.12",
+     "next-auth": "^4.22.3",
++    "next-themes": "^0.2.1",
+     "react": "18.2.0",
+     "react-dom": "18.2.0",
+     "react-hook-form": "^7.45.2",
 
+diff --git a/src/components/Providers.tsx b/src/components/Providers.tsx
+index 2ece641..abcd123 100644
+--- a/src/components/Providers.tsx
++++ b/src/components/Providers.tsx
+@@ -1,6 +1,7 @@
+ "use client";
+ 
+ import { SessionProvider } from "next-auth/react";
++import { ThemeProvider } from "next-themes";
+ import { Provider } from "react-redux";
+ import { store } from "@/redux/store";
+ import { Toaster } from "react-hot-toast";
+@@ -12,12 +13,16 @@ interface ProvidersProps {
+ export default function Providers({ children, session }: ProvidersProps) {
+   return (
+     <SessionProvider session={session}>
+-      <Provider store={store}>
+-        <Toaster position="top-center" reverseOrder={false} />
+-        {children}
+-      </Provider>
++      <ThemeProvider
++        attribute="class"
++        defaultTheme="system"
++        enableSystem
++        disableTransitionOnChange
++      >
++        <Provider store={store}>
++          <Toaster position="top-center" reverseOrder={false} />
++          {children}
++        </Provider>
++      </ThemeProvider>
+     </SessionProvider>
+   );
+ }
+
+diff --git a/src/components/ThemeToggle.tsx b/src/components/ThemeToggle.tsx
+new file mode 100644
+index 0000000..1234567
+--- /dev/null
++++ b/src/components/ThemeToggle.tsx
+@@ -0,0 +1,45 @@
++"use client";
++
++import { useTheme } from "next-themes";
++import { useEffect, useState } from "react";
++import { Moon, Sun, Monitor } from "lucide-react";
++
++export default function ThemeToggle() {
++  const [mounted, setMounted] = useState(false);
++  const { theme, setTheme } = useTheme();
++
++  useEffect(() => {
++    setMounted(true);
++  }, []);
++
++  if (!mounted) {
++    return (
++      <div className="w-9 h-9 rounded-md border border-gray-200 dark:border-gray-700 flex items-center justify-center">
++        <div className="w-4 h-4 bg-gray-300 dark:bg-gray-600 rounded animate-pulse" />
++      </div>
++    );
++  }
++
++  const cycleTheme = () => {
++    if (theme === "light") {
++      setTheme("dark");
++    } else if (theme === "dark") {
++      setTheme("system");
++    } else {
++      setTheme("light");
++    }
++  };
++
++  const getIcon = () => {
++    if (theme === "light") return <Sun className="w-4 h-4" />;
++    if (theme === "dark") return <Moon className="w-4 h-4" />;
++    return <Monitor className="w-4 h-4" />;
++  };
++
++  return (
++    <button
++      onClick={cycleTheme}
++      className="w-9 h-9 rounded-md border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center justify-center"
++      title={`Current theme: ${theme}. Click to cycle through light, dark, and system themes.`}
++    >
++      {getIcon()}
++    </button>
++  );
++}
+
+diff --git a/src/app/globals.css b/src/app/globals.css
+index aceeb57..def4567 100644
+--- a/src/app/globals.css
++++ b/src/app/globals.css
+@@ -3,6 +3,35 @@
+ @tailwind utilities;
+ 
+ :root {
++  /* Light theme colors */
++  --background: 0 0% 100%;
++  --foreground: 222.2 84% 4.9%;
++  --card: 0 0% 100%;
++  --card-foreground: 222.2 84% 4.9%;
++  --popover: 0 0% 100%;
++  --popover-foreground: 222.2 84% 4.9%;
++  --primary: 222.2 47.4% 11.2%;
++  --primary-foreground: 210 40% 98%;
++  --secondary: 210 40% 96%;
++  --secondary-foreground: 222.2 84% 4.9%;
++  --muted: 210 40% 96%;
++  --muted-foreground: 215.4 16.3% 46.9%;
++  --accent: 210 40% 96%;
++  --accent-foreground: 222.2 84% 4.9%;
++  --destructive: 0 84.2% 60.2%;
++  --destructive-foreground: 210 40% 98%;
++  --border: 214.3 31.8% 91.4%;
++  --input: 214.3 31.8% 91.4%;
++  --ring: 222.2 84% 4.9%;
++  --radius: 0.5rem;
++}
++
++.dark {
++  --background: 222.2 84% 4.9%;
++  --foreground: 210 40% 98%;
++  --card: 222.2 84% 4.9%;
++  --card-foreground: 210 40% 98%;
++  --popover: 222.2 84% 4.9%;
+   --foreground-rgb: 0, 0, 0;
+   --background-start-rgb: 214, 219, 220;
+   --background-end-rgb: 255, 255, 255;
+@@ -16,6 +45,21 @@
+   );
+ }
+ 
++.dark {
++  --popover-foreground: 210 40% 98%;
++  --primary: 210 40% 98%;
++  --primary-foreground: 222.2 84% 4.9%;
++  --secondary: 217.2 32.6% 17.5%;
++  --secondary-foreground: 210 40% 98%;
++  --muted: 217.2 32.6% 17.5%;
++  --muted-foreground: 215 20.2% 65.1%;
++  --accent: 217.2 32.6% 17.5%;
++  --accent-foreground: 210 40% 98%;
++  --destructive: 0 62.8% 30.6%;
++  --destructive-foreground: 210 40% 98%;
++  --border: 217.2 32.6% 17.5%;
++  --input: 217.2 32.6% 17.5%;
++  --ring: 212.7 26.8% 83.9%;
++}
++
+ @media (prefers-color-scheme: dark) {
+   :root {
+     --foreground-rgb: 255, 255, 255;
+@@ -32,6 +76,10 @@
+ }
+ 
+ body {
++  background-color: hsl(var(--background));
++  color: hsl(var(--foreground));
++  transition: background-color 0.3s ease, color 0.3s ease;
++}
++
++body {
+   color: rgb(var(--foreground-rgb));
+   background: linear-gradient(
+       to bottom,
+@@ -39,3 +87,8 @@
+       rgb(var(--background-end-rgb))
+     )
+     rgb(var(--background-start-rgb));
++}
++
++/* Ensure smooth transitions for theme changes */
++* {
++  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+ }
+
+diff --git a/tailwind.config.ts b/tailwind.config.ts
+index b7f97e8..cdef456 100644
+--- a/tailwind.config.ts
++++ b/tailwind.config.ts
+@@ -7,6 +7,7 @@ const config: Config = {
+     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
+   ],
+   theme: {
++    darkMode: ["class"],
+     extend: {
+       backgroundImage: {
+         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
+@@ -14,6 +15,35 @@ const config: Config = {
+           "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
+       },
++      colors: {
++        border: "hsl(var(--border))",
++        input: "hsl(var(--input))",
++        ring: "hsl(var(--ring))",
++        background: "hsl(var(--background))",
++        foreground: "hsl(var(--foreground))",
++        primary: {
++          DEFAULT: "hsl(var(--primary))",
++          foreground: "hsl(var(--primary-foreground))",
++        },
++        secondary: {
++          DEFAULT: "hsl(var(--secondary))",
++          foreground: "hsl(var(--secondary-foreground))",
++        },
++        destructive: {
++          DEFAULT: "hsl(var(--destructive))",
++          foreground: "hsl(var(--destructive-foreground))",
++        },
++        muted: {
++          DEFAULT: "hsl(var(--muted))",
++          foreground: "hsl(var(--muted-foreground))",
++        },
++        accent: {
++          DEFAULT: "hsl(var(--accent))",
++          foreground: "hsl(var(--accent-foreground))",
++        },
++        popover: {
++          DEFAULT: "hsl(var(--popover))",
++          foreground: "hsl(var(--popover-foreground))",
++        },
++        card: {
++          DEFAULT: "hsl(var(--card))",
++          foreground: "hsl(var(--card-foreground))",
++        },
++      },
++      borderRadius: {
++        lg: "var(--radius)",
++        md: "calc(var(--radius) - 2px)",
++        sm: "calc(var(--radius) - 4px)",
++      },
+     },
+   },
+   plugins: [],
+ };
+ 
+ export default config;
+
+diff --git a/README.md b/README.md
+index cd7f0e0..890abcd 100644
+--- a/README.md
++++ b/README.md
+@@ -1,5 +1,21 @@
+ # Next.js Blog
+ 
++## Dark Mode Implementation
++
++This project now includes a comprehensive dark mode implementation using `next-themes`. The dark mode features include:
++
++- **Theme Toggle Component**: A button that cycles between light, dark, and system themes
++- **Automatic System Theme Detection**: Respects user's system preference
++- **Smooth Transitions**: CSS transitions for seamless theme switching
++- **Persistent Theme Selection**: Theme preference is saved in localStorage
++- **SSR Safe**: Prevents hydration mismatches
++
++### Usage
++
++Import and use the `ThemeToggle` component in your navbar or any other component:
++
++```tsx
++import ThemeToggle from '@/components/ThemeToggle';
++
+ A modern blog application built with Next.js, featuring user authentication, post creation, and a clean, responsive design.
+ 
+ ## Features
+@@ -12,6 +28,7 @@ A modern blog application built with Next.js, featuring user authentication, po
+ - Search functionality
+ - Responsive design
+ - SEO optimized
++- Dark mode support with system preference detection
+ 
+ ## Tech Stack
+ 
+@@ -23,6 +40,7 @@ A modern blog application built with Next.js, featuring user authentication, po
+ - **Styling**: Tailwind CSS
+ - **Icons**: Lucide React
+ - **Form Handling**: React Hook Form
++- **Theme Management**: next-themes
+ 
+ ## Getting Started
+ 
+@@ -36,6 +54,7 @@ First, install the dependencies:
+ ```bash
+ npm install
+ # or
++npm install next-themes
+ yarn install
+ # or
+ pnpm install
